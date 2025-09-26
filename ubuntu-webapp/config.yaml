@@ -1,0 +1,9 @@
+---
+configs:
+    use: 'www'
+    www:
+        private_ip: '192.168.63.21'
+        vm_name: 'vagrant-ubuntu-www'
+        hostname: 'ubuntu-www'
+        memory: '2048'
+        cpus: '2'

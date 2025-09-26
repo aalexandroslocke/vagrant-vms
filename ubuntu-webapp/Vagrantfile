@@ -1,0 +1,28 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+
+current_dir    = File.dirname(File.expand_path(__FILE__))
+configs        = YAML.load_file("#{current_dir}/config.yaml")
+vagrant_config = configs['configs'][configs['configs']['use']]
+
+
+Vagrant.configure("2") do |config|
+  config.vm.define vagrant_config['vm_name']
+  config.vm.hostname = vagrant_config['hostname']
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: vagrant_config['private_ip']
+  config.vm.network "public_network"
+  config.vm.synced_folder "./html", "/var/www/html"
+  # config.vm.synced_folder "./html/css", "/var/www/html/css"
+  config.vm.provider "virtualbox" do |vb|
+  vb.memory = vagrant_config['memory']
+  vb.cpus = vagrant_config['cpus']
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get install -y apache2
+  SHELL
+end
