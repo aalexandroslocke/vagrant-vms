@@ -13,7 +13,7 @@ Vagrant.configure("2") do |config|
   config.vm.hostname = vagrant_config['hostname']
   config.vm.box = "ubuntu/jammy64"
   config.vm.network "private_network", ip: vagrant_config['private_ip']
-  config.vm.network "public_network"
+  config.vm.network "public_network", bridge: vagrant_config['bridge']
   config.vm.synced_folder "./html", "/var/www/html"
   # config.vm.synced_folder "./html/css", "/var/www/html/css"
   config.vm.provider "virtualbox" do |vb|
