@@ -1,0 +1,11 @@
+---
+configs:
+    use: 'www'
+    www:
+        os: 'ubuntu/focal64'
+        private_ip: '192.168.68.26'
+        bridge: 'Intel(R) Dual Band Wireless-AC 3168'
+        vm_name: 'vagrant-ubuntu-wordpress'
+        hostname: 'ubuntu-wordpress'
+        memory: '2048'
+        cpus: '2'

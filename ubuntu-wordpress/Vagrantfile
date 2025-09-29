@@ -1,0 +1,68 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+
+current_dir    = File.dirname(File.expand_path(__FILE__))
+configs        = YAML.load_file("#{current_dir}/config.yaml")
+vagrant_config = configs['configs'][configs['configs']['use']]
+
+
+Vagrant.configure("2") do |config|
+  config.vm.define vagrant_config['vm_name']
+  config.vm.hostname = vagrant_config['hostname']
+  config.vm.box = vagrant_config['os']
+  config.vm.network "private_network", ip: vagrant_config['private_ip']
+  config.vm.network "public_network", bridge: vagrant_config['bridge']
+  config.vm.synced_folder "./sites-available", "/etc/apache2/sites-available/"
+  config.vm.synced_folder "./sql", "/srv/sql"
+  config.vm.provider "virtualbox" do |vb|
+  vb.memory = vagrant_config['memory']
+  vb.cpus = vagrant_config['cpus']
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    sudo apt install apache2 \
+                 ghostscript \
+                 libapache2-mod-php \
+                 mysql-server \
+                 mysql-client \
+                 php \
+                 php-bcmath \
+                 php-curl \
+                 php-imagick \
+                 php-intl \
+                 php-json \
+                 php-mbstring \
+                 php-mysql \
+                 php-xml \
+                 php-zip -y
+
+    sudo mkdir -p /srv/www
+    sudo chown www-data: /srv/www
+    curl https://wordpress.org/latest.tar.gz | sudo -u www-data tar zx -C /srv/www
+
+    sudo a2ensite wordpress
+    sudo a2enmod rewrite
+    sudo a2dissite 000-default
+    sudo service apache2 restart
+
+    # Set up database
+    sudo mysql -u root < /srv/sql/configure_db.sql
+    
+    # Set up wordpress
+    sudo -u www-data cp /srv/www/wordpress/wp-config-sample.php /srv/www/wordpress/wp-config.php
+
+    sudo -u www-data sed -i 's/database_name_here/wordpress/' /srv/www/wordpress/wp-config.php
+    sudo -u www-data sed -i 's/username_here/wordpress/' /srv/www/wordpress/wp-config.php
+    sudo -u www-data sed -i 's/password_here/admin123/' /srv/www/wordpress/wp-config.php
+
+  # MANUAL STEP
+  # Generate your own unique keys at https://api.wordpress.org/secret-key/1.1/salt/
+  # and replace the placeholders in /srv/www/wordpress/wp-config.php
+  
+  # Navigate to private IP in your browser to finish WordPress setup
+
+  SHELL
+end
