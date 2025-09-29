@@ -1,0 +1,44 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+
+current_dir    = File.dirname(File.expand_path(__FILE__))
+configs        = YAML.load_file("#{current_dir}/config.yaml")
+vagrant_config_web= configs['configs'][configs['configs']['use-web']]
+vagrant_config_db= configs['configs'][configs['configs']['use-db']]
+
+
+Vagrant.configure("2") do |config|
+  config.vm.define vagrant_config_web['vm_name'] do |web|
+  web.vm.hostname =  vagrant_config_web['hostname']
+  web.vm.box = "ubuntu/jammy64"
+  web.vm.network "private_network", ip: vagrant_config_web['private_ip']
+  web.vm.network "public_network", bridge: vagrant_config_web['bridge']
+  web.vm.synced_folder "./html", "/var/www/html"
+  web.vm.provider "web.virtualbox" do |vb|
+  vb.memory = vagrant_config_web['memory']
+  vb.cpus = vagrant_config_web['cpus']
+  end
+  web.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    sudo apt install apache2 -y
+  SHELL
+  end
+
+  config.vm.define vagrant_config_db['vm_name'] do |db|
+    db.vm.hostname = vagrant_config_db['hostname']
+    db.vm.box = "ubuntu/jammy64"
+    db.vm.network "private_network", ip: vagrant_config_db['private_ip']
+    db.vm.network "public_network", bridge: vagrant_config_db['bridge']
+    db.vm.provider "virtualbox" do |vb|
+      vb.memory = vagrant_config_db['memory']
+      vb.cpus = vagrant_config_db['cpus']
+    end
+
+  db.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    sudo apt install mysql-server -y
+  SHELL
+  end
+end

@@ -1,0 +1,18 @@
+---
+configs:
+    use-db: 'db'
+    use-web: 'web'
+    web:
+        vm_name: 'vagrant-ubuntu-web'
+        private_ip: '192.168.63.121'
+        bridge: 'Intel(R) Dual Band Wireless-AC 3168'
+        hostname: 'ubuntu-web'
+        memory: '2048'
+        cpus: '2'
+    db:
+        vm_name: 'vagrant-ubuntu-db'
+        private_ip: '192.168.63.122'
+        bridge: 'Intel(R) Dual Band Wireless-AC 3168'
+        hostname: 'ubuntu-db'
+        memory: '2048'
+        cpus: '2'
