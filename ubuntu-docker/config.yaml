@@ -1,0 +1,10 @@
+---
+configs:
+    use: 'docker'
+    docker:
+        private_ip: '192.168.63.21'
+        bridge: 'Intel(R) Dual Band Wireless-AC 3168'
+        vm_name: 'ubuntu-docker'
+        hostname: 'ubuntu-docker'
+        memory: '2048'
+        cpus: '2'

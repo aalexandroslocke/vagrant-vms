@@ -1,0 +1,45 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+
+current_dir    = File.dirname(File.expand_path(__FILE__))
+configs        = YAML.load_file("#{current_dir}/config.yaml")
+vagrant_config = configs['configs'][configs['configs']['use']]
+
+
+Vagrant.configure("2") do |config|
+  config.vm.define vagrant_config['vm_name']
+  config.vm.hostname = vagrant_config['hostname']
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.network "private_network", ip: vagrant_config['private_ip']
+  config.vm.network "public_network", bridge: vagrant_config['bridge']
+  config.vm.synced_folder "./compose", "/var/compose"
+  config.vm.provider "virtualbox" do |vb|
+  vb.memory = vagrant_config['memory']
+  vb.cpus = vagrant_config['cpus']
+  end
+
+  config.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    # Add Docker's official GPG key:
+    sudo apt-get update
+    sudo apt-get install ca-certificates curl
+    sudo install -m 0755 -d /etc/apt/keyrings
+    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+  # Add the repository to Apt sources:
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+      sudo apt-get update
+
+  # Install Docker Engine
+    sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+    sudo systemctl start docker
+    sudo docker compose -f /var/compose/docker-compose.yml up -d
+
+  SHELL
+end
